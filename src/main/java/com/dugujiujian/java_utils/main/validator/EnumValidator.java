@@ -23,7 +23,7 @@ public class EnumValidator implements ConstraintValidator<EnumValid, Object> {
     @Override
     public void initialize(EnumValid constraintAnnotation) {
         Class<? extends Enum<?>> enumClass = constraintAnnotation.enumClass();
-        Field[] fields = enumClass.getFields();
+        Field[] fields = enumClass.getDeclaredFields();
 
         Field fieldVal = null;
         for (Field field : fields) {
@@ -32,16 +32,18 @@ public class EnumValidator implements ConstraintValidator<EnumValid, Object> {
                 fieldVal = field;
             }
         }
-        Field finalFieldVal = fieldVal;
-        acceptedValues = Stream.of(enumClass.getEnumConstants())
-                .map(en -> {
-                    try {
-                        return finalFieldVal.get(en);
-                    } catch (IllegalAccessException e) {
-                        log.error("Enum Validator init error", e);
-                        return null;
-                    }
-                }).filter(Objects::nonNull).collect(Collectors.toList());
+        if (Objects.nonNull(fieldVal)) {
+            Field finalFieldVal = fieldVal;
+            acceptedValues = Stream.of(enumClass.getEnumConstants())
+                    .map(en -> {
+                        try {
+                            return finalFieldVal.get(en);
+                        } catch (IllegalAccessException e) {
+                            log.error("Enum Validator init error", e);
+                            return null;
+                        }
+                    }).filter(Objects::nonNull).collect(Collectors.toList());
+        }
     }
 
 
